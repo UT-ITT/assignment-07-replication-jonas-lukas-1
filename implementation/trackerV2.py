@@ -4,7 +4,7 @@ import time
 
 PORT = 5700
 
-class GyroTrackerV3:
+class GyroTrackerV2:
     def __init__(self):
         self.port = PORT
         self.sensor = SensorUDP(PORT)
@@ -13,7 +13,7 @@ class GyroTrackerV3:
         self.gyro_data = None
         self.tracking = False
         
-        # Register callbacks for gyro instead of gravity
+        # Register callbacks for gyro and button
         self.sensor.register_callback("button_1", self.handle_button_1)
         self.sensor.register_callback("gyroscope", self.handle_gyroscope)
 
@@ -63,7 +63,7 @@ class GyroTrackerV3:
         
 if __name__ == "__main__":
     try:
-        tracker = GyroTrackerV3()
+        tracker = GyroTrackerV2()
         tracker.run()
     except KeyboardInterrupt:
         print("\nStopping tracker...")
