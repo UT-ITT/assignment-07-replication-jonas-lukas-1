@@ -52,10 +52,10 @@ class GyroTrackerV2:
         if int(data) == 1:
             self.keyboard.press(Key.left)
             
-    # Trigger right arrow key press when button 4 is pressed 
+    # Trigger left mouse click, when button 4 is pressed 
     def handle_button_4(self, data):
         if int(data) == 1:
-            self.mouse.click(Button.left, 1)
+            self.keyboard.press(Key.right)
             
     def run(self):
         print(f"Listening on port {PORT}. Hold Button 1 to control the mouse. Release to stop.")
