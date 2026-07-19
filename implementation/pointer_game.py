@@ -18,6 +18,7 @@ window.set_mouse_visible(False)
 
 TARGET_RADIUS = 30
 TARGET_TIME = 5  # seconds
+GAME_TIME = 30  # seconds
 SPAWN_LEFT = 0.16
 SPAWN_TOP = 0.3
 SPAWN_RIGHT = 0.84
@@ -25,6 +26,38 @@ SPAWN_BOTTOM = 0.84
 
 mouse_x = WINDOW_WIDTH // 2
 mouse_y = WINDOW_HEIGHT // 2
+score = 0
+time_left = GAME_TIME
+game_state = "start"
+last_round_score = 0
+
+score_label = pyglet.text.Label(
+    "Score: 0",
+    x=20,
+    y=WINDOW_HEIGHT - 40,
+    font_size=20,
+    color=(255, 255, 255, 255),
+)
+
+center_title = pyglet.text.Label(
+    "",
+    x=WINDOW_WIDTH // 2,
+    y=WINDOW_HEIGHT // 2 + 80,
+    anchor_x="center",
+    anchor_y="center",
+    font_size=36,
+    color=(255, 255, 255, 255),
+)
+
+center_info = pyglet.text.Label(
+    "",
+    x=WINDOW_WIDTH // 2,
+    y=WINDOW_HEIGHT // 2,
+    anchor_x="center",
+    anchor_y="center",
+    font_size=20,
+    color=(255, 255, 255, 255),
+)
 
 def measure_distance(x1, y1, x2, y2):
     distance = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
@@ -78,7 +111,8 @@ class Target:
             distance = measure_distance(x, y, target.x, target.y)
             if distance <= target.radius:
                 Target.targets.remove(target)
-                break
+                return max(1, TARGET_TIME - int(target.age))
+        return 0
 
     def update(self, time_delta):
         self.age += time_delta
@@ -88,6 +122,33 @@ class Target:
     def draw(self):
         for ring in self.rings:
             ring.draw()
+
+
+def reset_game():
+    global score, time_left, game_state, last_round_score
+    Target.targets.clear()
+    score = 0
+    time_left = GAME_TIME
+    last_round_score = 0
+    game_state = "playing"
+
+
+def set_start_screen():
+    global game_state
+    game_state = "start"
+
+
+def set_game_over_screen():
+    global game_state, last_round_score
+    last_round_score = score
+    game_state = "game_over"
+
+
+def draw_overlay(title, message):
+    center_title.text = title
+    center_info.text = message
+    center_title.draw()
+    center_info.draw()
 
 bb_wall = shapes.BorderedRectangle(
     int(window.width * SPAWN_LEFT),
@@ -107,7 +168,10 @@ def on_resize(width, height):
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    Target.propagate_click(x, y)
+    global score
+    if game_state != "playing":
+        return
+    score += Target.propagate_click(x, y)
 
 @window.event
 def on_mouse_motion(x, y, dx, dy):
@@ -125,12 +189,16 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
 def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.Q:
         os._exit(0)  # sys.exit(0) -> for mac and linux
+    if symbol == pyglet.window.key.SPACE:
+        if game_state in ("start", "game_over"):
+            reset_game()
 
 @window.event
 def on_draw():
     window.clear()
     background_image.blit(0, 0)
-    Target.draw_targets()
+    if game_state == "playing":
+        Target.draw_targets()
     # bb_wall.draw() # For testing the spawn area
 
     glow = shapes.Circle(x=mouse_x, y=mouse_y, radius=7, color=(255, 40, 40))
@@ -139,7 +207,51 @@ def on_draw():
     glow.draw()
     core.draw()
 
-clock.schedule_interval(Target.update_targets, 0.1)
-clock.schedule_interval(Target.create_target, 0.15)
+    score_label.text = f"Score: {score}"
+    score_label.y = window.height - 40
+    score_label.text = f"Score: {score}"
+
+    if game_state == "playing":
+        score_label.draw()
+        score_label.text = f"Score: {score}"
+        time_text = pyglet.text.Label(
+            f"Time: {max(0, int(time_left))}",
+            x=window.width - 20,
+            y=window.height - 40,
+            anchor_x="right",
+            font_size=20,
+            color=(255, 255, 255, 255),
+        )
+        time_text.draw()
+    elif game_state == "start":
+        draw_overlay("Pointer Game", "Press SPACE to start")
+    elif game_state == "game_over":
+        draw_overlay("Game Over", f"Score: {last_round_score}  Press SPACE to restart")
+
+
+def update_game(delta_time):
+    global time_left
+    if game_state != "playing":
+        return
+
+    time_left -= delta_time
+    if time_left <= 0:
+        time_left = 0
+        set_game_over_screen()
+
+
+def update_world(delta_time):
+    if game_state != "playing":
+        return
+
+    Target.update_targets(delta_time)
+    Target.create_target(delta_time)
+
+clock.schedule_interval(update_game, 0.1)
+clock.schedule_interval(update_world, 0.1)
 
 pyglet.app.run()
+
+
+# Todo 
+# Scorer, Timer, Game Over, Start Screen, High Score, Sound Effects, time basiertes scroring.
