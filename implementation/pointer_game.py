@@ -46,7 +46,7 @@ center_title = pyglet.text.Label(
     anchor_x="center",
     anchor_y="center",
     font_size=36,
-    color=(255, 255, 255, 255),
+    color=(55, 55, 55, 255),
 )
 
 center_info = pyglet.text.Label(
@@ -56,7 +56,7 @@ center_info = pyglet.text.Label(
     anchor_x="center",
     anchor_y="center",
     font_size=20,
-    color=(255, 255, 255, 255),
+    color=(55, 55, 55, 255),
 )
 
 def measure_distance(x1, y1, x2, y2):
