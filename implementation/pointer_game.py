@@ -5,10 +5,12 @@ import numpy as np
 # import sys
 import os
 
+# Pyglet screen
 screen = pyglet.display.get_display().get_default_screen()
 WINDOW_WIDTH = screen.width
 WINDOW_HEIGHT = screen.height
 
+# Game background
 background_image = pyglet.resource.image('background.png')
 background_image.width = WINDOW_WIDTH
 background_image.height = WINDOW_HEIGHT
@@ -16,14 +18,17 @@ background_image.height = WINDOW_HEIGHT
 window = pyglet.window.Window(WINDOW_WIDTH, WINDOW_HEIGHT, resizable=True, caption="Pointing Game")
 window.set_mouse_visible(False)
 
+# parameters
 TARGET_RADIUS = 30
 TARGET_TIME = 5  # seconds
 GAME_TIME = 30  # seconds
+# Spawn area percentages of windows size
 SPAWN_LEFT = 0.16
 SPAWN_TOP = 0.3
 SPAWN_RIGHT = 0.84
 SPAWN_BOTTOM = 0.84
 
+# Game state variables
 mouse_x = WINDOW_WIDTH // 2
 mouse_y = WINDOW_HEIGHT // 2
 score = 0
@@ -31,6 +36,7 @@ time_left = GAME_TIME
 game_state = "start"
 last_round_score = 0
 
+# text labels
 score_label = pyglet.text.Label(
     "Score: 0",
     x=20,
@@ -66,6 +72,7 @@ def measure_distance(x1, y1, x2, y2):
 class Target:
     targets = []
 
+    # Draw more Circles (rings) to make it look like a target
     def __init__(self, x, y, radius):
         self.x = x
         self.y = y
@@ -74,7 +81,7 @@ class Target:
             shapes.Circle(x=self.x, y=self.y, radius=30, color=(220, 0, 0)),
             shapes.Circle(x=self.x, y=self.y, radius=22, color=(255, 255, 255)),
             shapes.Circle(x=self.x, y=self.y, radius=14, color=(220, 0, 0)),
-            shapes.Circle(x=self.x, y=self.y, radius=6, color=(255, 255, 255)),
+            shapes.Circle(x=self.x, y=self.y, radius=6, color=(255, 255, 255)), 
         ]
         self.lifetime = TARGET_TIME
         self.age = 0
@@ -101,7 +108,7 @@ class Target:
             if min_x > max_x or min_y > max_y:
                 return
 
-            x = random.randint(min_x, max_x)
+            x = random.randint(min_x, max_x) # Creating the targets only in the spawn area
             y = random.randint(min_y, max_y)
             Target.targets.append(Target(x, y, radius))
 
@@ -110,8 +117,8 @@ class Target:
         for target in reversed(Target.targets):
             distance = measure_distance(x, y, target.x, target.y)
             if distance <= target.radius:
-                Target.targets.remove(target)
-                return max(1, TARGET_TIME - int(target.age))
+                Target.targets.remove(target) # Remove the target when clicked on it
+                return max(1, TARGET_TIME - int(target.age)) # Score is based on how fast the target was clicked
         return 0
 
     def update(self, time_delta):
@@ -150,6 +157,7 @@ def draw_overlay(title, message):
     center_title.draw()
     center_info.draw()
 
+# Help for debugging the spawn area
 bb_wall = shapes.BorderedRectangle(
     int(window.width * SPAWN_LEFT),
     int(window.height * SPAWN_TOP),
@@ -160,6 +168,7 @@ bb_wall = shapes.BorderedRectangle(
     border_color=(255, 0, 0)
 )
 
+# Handler if the window gets resized, so the background image and the spawn area are adjusted accordingly
 @window.event
 def on_resize(width, height):
     background_image.width = width
@@ -169,7 +178,7 @@ def on_resize(width, height):
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     global score
-    if game_state != "playing":
+    if game_state != "playing": # check for game state 
         return
     score += Target.propagate_click(x, y)
 
@@ -187,9 +196,9 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
 
 @window.event
 def on_key_press(symbol, modifiers):
-    if symbol == pyglet.window.key.Q:
+    if symbol == pyglet.window.key.Q: # Close the game with Q
         os._exit(0)  # sys.exit(0) -> for mac and linux
-    if symbol == pyglet.window.key.SPACE:
+    if symbol == pyglet.window.key.SPACE: # Start the game with SPACE in start and game_over screen
         if game_state in ("start", "game_over"):
             reset_game()
 
@@ -201,6 +210,7 @@ def on_draw():
         Target.draw_targets()
     # bb_wall.draw() # For testing the spawn area
 
+    # Mouse pointer
     glow = shapes.Circle(x=mouse_x, y=mouse_y, radius=7, color=(255, 40, 40))
     core = shapes.Circle(x=mouse_x, y=mouse_y, radius=3, color=(255, 220, 220))
 
@@ -209,8 +219,9 @@ def on_draw():
 
     score_label.text = f"Score: {score}"
     score_label.y = window.height - 40
-    score_label.text = f"Score: {score}"
 
+    # Check for game state
+    # Draw the score and time left on the screen only when playing
     if game_state == "playing":
         score_label.draw()
         score_label.text = f"Score: {score}"
@@ -222,13 +233,13 @@ def on_draw():
             font_size=20,
             color=(255, 255, 255, 255),
         )
-        time_text.draw()
+        time_text.draw()       
     elif game_state == "start":
         draw_overlay("Pointer Game", "Press SPACE to start")
     elif game_state == "game_over":
         draw_overlay("Game Over", f"Score: {last_round_score}  Press SPACE to restart")
 
-
+# For the game state and time
 def update_game(delta_time):
     global time_left
     if game_state != "playing":
@@ -239,7 +250,7 @@ def update_game(delta_time):
         time_left = 0
         set_game_over_screen()
 
-
+# For the target creation and update
 def update_world(delta_time):
     if game_state != "playing":
         return
@@ -251,7 +262,3 @@ clock.schedule_interval(update_game, 0.1)
 clock.schedule_interval(update_world, 0.1)
 
 pyglet.app.run()
-
-
-# Todo 
-# Scorer, Timer, Game Over, Start Screen, High Score, Sound Effects, time basiertes scroring.
