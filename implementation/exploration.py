@@ -1,8 +1,9 @@
 import argparse
 import os
-import matplotlib.pyplot as plt
-from DIPPID import SensorUDP
 import time
+
+from DIPPID import SensorUDP
+import matplotlib.pyplot as plt
 
 PORT = 5700
 

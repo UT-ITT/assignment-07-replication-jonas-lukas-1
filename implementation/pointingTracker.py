@@ -1,18 +1,24 @@
 from DIPPID import SensorUDP 
-from pynput.mouse import Controller as MouseController
-from pynput.mouse import Button
-from pynput.keyboard import Controller as KeyboardController
-from pynput.keyboard import Key
+from pynput.mouse import Controller as MouseController, Button
+from pynput.keyboard import Controller as KeyboardController, Key, Listener
+
 import time
 
 PORT = 5700
 
-class GyroTrackerV2:
+class PointingTracker:
     def __init__(self):
         self.port = PORT
         self.sensor = SensorUDP(PORT)
         self.mouse = MouseController()
         self.keyboard = KeyboardController()
+        
+        # Flag to control the main loop
+        self.running = True
+        
+        # Start the keyboard listener in the background
+        self.listener = Listener(on_press=self.on_press)
+        self.listener.start()
 
         self.gyro_data = None
         self.tracking = False
@@ -57,6 +63,20 @@ class GyroTrackerV2:
         if int(data) == 1:
             self.mouse.click(Button.left, 1)
             
+    # Handle ESC key press to stop the program
+    def on_press(self, key):
+        if key == Key.esc:
+            print("\nESC pressed. Exiting...")
+            self.running = False
+            return False
+    
+    # Clean up resources when stopping the program
+    def cleanup(self):
+        print("Stopping tracker...")
+        if self.listener.running:
+            self.listener.stop()
+        self.sensor.disconnect()
+            
     def run(self):
         print(f"Listening on port {PORT}. Hold Button 1 to control the mouse. Release to stop.")
         
@@ -66,7 +86,7 @@ class GyroTrackerV2:
         # Filters out minor gyroscope noise
         gyro_noise = 0.1
 
-        while True:
+        while self.running:
             if self.tracking and self.gyro_data:
 
                 # Get the gyroscope data
@@ -88,10 +108,11 @@ class GyroTrackerV2:
             # Smooth 100hz polling
             time.sleep(0.01)
         
+        self.cleanup()
+        
 if __name__ == "__main__":
     try:
-        tracker = GyroTrackerV2()
+        tracker = PointingTracker()
         tracker.run()
     except KeyboardInterrupt:
-        print("\nStopping tracker...")
-        tracker.sensor.disconnect()
+        tracker.cleanup()
