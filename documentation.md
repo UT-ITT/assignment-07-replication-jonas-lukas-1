@@ -18,7 +18,37 @@ Therefore we searched for other papers implementing intresting interaction techn
 At last we looked at **Scroll, Tilt or Move It: Using Mobile Phones to Continu-ously Control Pointers on Large Public Displays** which implements three different interaction techniques with the mobile phone as input device to control larger displays and was our final decision for this assignment, because it implemented a interaction technique fitting to other assignments but also something we haven't done exactly and is possible to implement using DIPPID. Also this Interaction technique is very good for a demo in our presentation by using the smartphone as a pointer for the presentation and extending the implementation with an application to showcase the mouse control and thought about different control modes modes.
 
 # 3. Documentation
+- DIPPID recall
+- How to interpret the sensor data (see data, exploration.py)
+- Implementation according to paper (V1)
+- Laser pointer like implementation (V2)
+- Hyperparameter tweaking (sensitivity, deadzone)
+- Button mapping and potential usecases (presentationTracker, browsingTracker)
+- Demo Game
+
+## Dependencies
+
+We recommend using Python 3.14 to run the code implementation, but older versions should also work.
+
+To install all the dependencies run the following commands.
+
+```bash
+python -m .venv venv
+.venv/Scripts/activate
+pip install -r requirements.txt
+```
+
 ## Development process
+### Scroll, Tilt or Move It
+The paper from Sebastian Boring, Marko Jurmu and Andreas Butz describes three techniques to interact with a big screen display from a distance using a mobile- / smartphone. The interaction techniques get increasingly more complex and all have their up and downsides. The techniques are the following:
+
+- **Scrolling:** The cursor on the display gets moved by pressing keys on the mobile phone, e.g. the arrow keys on older mobiles. On modern smartphones this can be mapped to buttons on the touch display. As long as one key/button is pressed the cursor moves in a specific direction (up, down, left, right).
+- **Tilting:** Using build in sensors of the mobile- / smartphone the user can tilt the phone on the X- and Y-Axis to move the cursor. Depending on the tilt angle the cursor moves faster or slower, similar to a joystick of a gaming controller.
+- **Moving:** In the paper the camera of the phone is used to detect the physical movement of the phone in space. This linear movement in space is directly mapped to the position of the cursor. Here the user controls the speed of movement by how fast the phone is moved in space. This is the most interesting aspect of this paper, yet the implementation using a camera is rather difficult and also we think that we can do better using the given sensors in modern smartphones like a gyroscope, acceleration or gravity sensor.
+
+### Implementation - Scrolling
+The implemetation of the scrolling mechanism is straight forward and does not need extensive though since we alreaday implemented similar problems using the DIPPID framework in previous assignments. Yet this was a good starting point to get a feeling for the problem.
+
 ### Problems
 ### Intermediate steps
 ### Limitations
